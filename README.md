@@ -1,4 +1,10 @@
-# TBA
+# Gaze Estimation for Human-Robot Interaction: Analysis Using the NICO Platform
+
+Pre-print: TBA.
+
+Abstract: This paper evaluates the current gaze estimation methods within a HRI context of a shared workspace scenario. We introduce a new, annotated dataset collected with the NICO robotic platform. We evaluate four state-of-the-art gaze estimation models. The evaluation shows that the angular errors are close to those reported on general-purpose benchmarks. However, when expressed in terms of distance in the shared work space the best median error is 16.54 cm quantifying the practical limitations of current methods. We conclude by discussing these limitations and offering recommendations on how to best integrate gaze estimation as a modality in HRI systems.
+
+## Running the code
 
 ### Download the dataset
 
@@ -32,4 +38,51 @@ python eval_utils/calibrate_stereo.py path/to/dataset/calibration
 
 ```shell
 python evaluate.py path/to/downloaded_dataset/eyetracker
+```
+## Acknowledgment
+
+We have used code from the following repositories:
+
+* GazeTR: https://github.com/yihuacheng/GazeTR
+* L2CS: https://github.com/Ahmednull/L2CS-Net
+* 3DGazeNet: https://github.com/eververas/3DGazeNet
+* Gaze3D https://github.com/idiap/gaze3d
+
+If you use the code please cite also the original publications:
+
+```
+@inproceedings{cheng2022GazeTR,
+  title={Gaze estimation using transformer},
+  author={Cheng, Yihua and Lu, Feng},
+  booktitle={2022 26th International Conference on Pattern Recognition (ICPR)},
+  pages={3341--3347},
+  year={2022},
+  organization={IEEE}
+}
+
+@inproceedings{abdelrahman2023L2CS,
+  title={L2cs-net: Fine-grained gaze estimation in unconstrained environments},
+  author={Abdelrahman, Ahmed A and Hempel, Thorsten and Khalifa, Aly and Al-Hamadi, Ayoub and Dinges, Laslo},
+  booktitle={2023 8th International Conference on Frontiers of Signal Processing (ICFSP)},
+  pages={98--102},
+  year={2023},
+  organization={IEEE}
+}
+
+@inproceedings{ververas20243dGazeNet,
+  title={3DGazeNet: Generalizing 3D gaze estimation with weak-supervision from synthetic views},
+  author={Ververas, Evangelos and Gkagkos, Polydefkis and Deng, Jiankang and Doukas, Michail Christos and Guo, Jia and Zafeiriou, Stefanos},
+  booktitle={European Conference on Computer Vision},
+  pages={387--404},
+  year={2024},
+  organization={Springer}
+}
+
+@inproceedings{vuillecard2025Gaze3D,
+  author = {Vuillecard, Pierre and Odobez, Jean-Marc},
+  month = jun,
+  title = {Enhancing 3D Gaze Estimation in the Wild using Weak Supervision with Gaze Following Labels},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year = {2025},
+}
 ```
