@@ -103,7 +103,7 @@ class Model(nn.Module):
 
 
     def forward(self, x_in):
-        feature = self.base_model(x_in["face"])
+        feature = self.base_model(x_in["face"].cuda())
         batch_size = feature.size(0)
         feature = feature.flatten(2)
         feature = feature.permute(2, 0, 1)
@@ -111,7 +111,7 @@ class Model(nn.Module):
         cls = self.cls_token.repeat( (1, batch_size, 1))
         feature = torch.cat([cls, feature], 0)
         
-        position = torch.from_numpy(np.arange(0, 50))
+        position = torch.from_numpy(np.arange(0, 50)).cuda()
 
         pos_feature = self.pos_embedding(position)
 

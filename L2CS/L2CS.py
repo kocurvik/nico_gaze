@@ -1,7 +1,9 @@
-from l2cs import Pipeline, render, gazeto3d
+from L2CS import Pipeline, render, gazeto3d
 import torch
 import numpy as np
 import cv2
+
+from eval_utils.visualization import get_corrected_gaze
 
 
 # https://github.com/ahmednull/l2cs-net
@@ -11,7 +13,7 @@ class L2CS:
         self.gaze_pipeline = Pipeline(
             weights=weights_file,
             arch=arch,
-            device=torch.device('cpu'),
+            device=torch.device('cuda'),
             confidence_threshold=0.95
         )
 
@@ -34,11 +36,17 @@ class L2CS:
         if (b < 0): b = 0
         c, d = self._getBoxSize(res.bboxes[0])
         x, y = (int(a + c / 2.0), int(b + d / 2.0))
-        return True, x, y, res, (a, b, c, d)
+        return True, x, y, res, (a, b, c, d), img
 
     def compute_head_coordinates(self, img_l, img_r, P_l, P_r, show=False):
-        ret_l, x_l, y_l, res_l, box_coor_l = self._getEyeCoordinates(img_l, show=show)
-        ret_r, x_r, y_r, res_r, box_coor_r = self._getEyeCoordinates(img_r, show=show)
+        ret_l, x_l, y_l, res_l, box_coor_l, show_l = self._getEyeCoordinates(img_l, show=show)
+        ret_r, x_r, y_r, res_r, box_coor_r, show_r = self._getEyeCoordinates(img_r, show=show)
+
+        if show:
+            cv2.imshow('L2CS-direct-l', cv2.resize(show_l, None, fx=0.25, fy=0.25))
+            cv2.imshow('L2CS-direct-r', cv2.resize(show_r, None, fx=0.25, fy=0.25))
+            cv2.waitKey(0)
+
 
         point_l = np.array([[x_l], [y_l]], dtype=float)
         point_r = np.array([[x_r], [y_r]], dtype=float)
@@ -62,7 +70,8 @@ class L2CS:
         bbox_height = y_max - y_min
         return bbox_width, bbox_height
 
-    def get_direction_vector(self, results):
+    def get_direction_vector(self, results, head_point):
         gaze = np.array([results.pitch[0], results.yaw[0]])
         dVector = gazeto3d(gaze)
-        return dVector
+        gaze_3d = get_corrected_gaze(dVector, head_point)
+        return gaze_3d

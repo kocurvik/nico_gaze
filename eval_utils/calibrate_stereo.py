@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 
-from utils import get_l_r_image_fnames, load_calib_data, get_undistort_functions, save_array
+from eval_utils.image import get_l_r_image_fnames, get_undistort_functions, save_array
 
 CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 frameSize = (640, 480)
@@ -219,33 +219,17 @@ def show_real_time(calib_dict, dirc):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('calib_imgs_dir', type=str, help='directory with calibration images')
-    parser.add_argument('out_dir', type=str, help='directory where the calibration pickle gets saved to')
     parser.add_argument('-d', '--debug', type=int, default=0,
                         help='whether to debug 1 shows calib images, 2 lets you see the undistorted calib files')
-    parser.add_argument('-eyeTracker_dir', '--debug', type=str, default="",
-                        help='directory with eyetracking images')
+    parser.add_argument('calib_imgs_dir', type=str, help='directory with calibration images')
     args = parser.parse_args()
     return args
 
 
 if __name__ == '__main__':
-    # par_dir = "C:/Users/Matej/Desktop/bakalarkaGit/bakalarka/BachelorThesis/nico_images/dataset_03"
-    # calib_imgs_dir = par_dir + '/calibration'
-    # out_dir = par_dir + '/out'
-    # eyeTracker_dir = par_dir + '/eyetracker'
-    # debug = 2
-
     args = parse_args()
     calib_imgs_dir = args.calib_imgs_dir
-    out_dir = args.out_dir
     debug = args.debug
-    eyeTracker_dir = args.eyeTracker_dir
 
     calib_dict = calibrate(calib_imgs_dir, debug=debug, chessboard_dim=32.0, max_imgs=20)
-    save_array(calib_dict, os.path.join(out_dir, 'calib_data.npy'))
-
-    # calib_dict = load_calib_data(out_dir + "/calib_data.npy")  # load_calib_data(out_dir + "/calib_data.npy")
-    # show_undistored(calib_imgs_dir, calib_dict)
-    #
-    # show_real_time(calib_dict, eyeTracker_dir)
+    save_array(calib_dict, os.path.join('calib_data', 'calib_data.npy'))

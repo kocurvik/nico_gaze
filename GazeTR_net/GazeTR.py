@@ -9,7 +9,7 @@ import numpy as np
 
 class GazeTR:
     def __init__(self, weights_file):
-        self.model = Model()
+        self.model = Model().cuda()
         self.model.load_state_dict(torch.load(weights_file, map_location=torch.device('cpu')))
         self.model.eval()  # Set the model to evaluation mode
 
@@ -22,7 +22,7 @@ class GazeTR:
         img = {'face': img}
         with torch.no_grad():
             gaze = self.model.forward(img)
-        gaze = gaze.detach().numpy().flatten()
+        gaze = gaze.detach().cpu().numpy().flatten()
         dVector = gazeto3d(gaze)
         return dVector
 

@@ -1,6 +1,91 @@
 import numpy as np
 import plotly.graph_objects as go
+from matplotlib import pyplot as plt
+import seaborn as sns
 
+
+def plot_angle_distribution(name, vectors):
+    """
+    Draws a 2D distribution (heatmap) over the space of yaw and pitch angles
+    given a list of 3D direction vectors.
+
+    Args:
+        vectors (list or numpy.ndarray): A list or array of 3D vectors.
+                                         Each vector should be a list, tuple,
+                                         or array of length 3, e.g., [[x, y, z], ...].
+    """
+    # Convert input list to a NumPy array for efficient vector operations
+    vectors = np.array(vectors)
+
+    # Check if the input is valid
+    if vectors.shape[1] != 3:
+        raise ValueError("Input vectors must be 3D (shape must be (N, 3)).")
+
+    yaw_deg, pitch_deg = yaw_pitch_from_direction(vectors)
+
+    # Create the 2D histogram (heatmap) of the angle distribution
+    plt.figure(figsize=(7, 3))
+
+    sns.kdeplot(
+        x=yaw_deg,
+        y=pitch_deg,
+        bw_adjust=.5,
+        fill=True,
+        cmap='viridis',
+        levels=10  # Use more levels for a more detailed contour map
+    )
+
+    large_size = 20
+    small_size = 16
+
+    plt.xlabel('Yaw Angle ($^\circ$)', fontsize=large_size)
+    plt.ylabel('Pitch Angle ($^\circ$)', fontsize=large_size)
+    plt.tick_params(axis='x', which='major', labelsize=small_size)
+    plt.tick_params(axis='y', which='major', labelsize=small_size)
+
+    plt.xlim(-90, 90)
+    plt.ylim(-100, 0)
+
+    plt.grid(True, linestyle='--', alpha=0.6)
+
+    plt.savefig(f'figs/distribution_{name}.pdf', bbox_inches='tight', pad_inches=0.1)
+    plt.show()
+
+
+def yaw_pitch_from_direction(vectors):
+    # Extract components for clarity
+    vectors /= np.linalg.norm(vectors, axis=-1, keepdims=True)
+    x = vectors[..., 0]
+    y = vectors[..., 1]
+    z = vectors[..., 2]
+    yaw_rad = np.arctan2(x, -z)
+    pitch_rad = np.arcsin(-y)
+    yaw_deg = np.degrees(yaw_rad)
+    pitch_deg = np.degrees(pitch_rad)
+    return yaw_deg, pitch_deg
+
+def direction_from_yaw_pitch(yaw, pitch):
+    yaw = np.deg2rad(yaw)
+    pitch = np.deg2rad(pitch)
+    if np.isscalar(yaw) :
+        direction = np.zeros(3)
+    else:
+        direction = np.zeros([len(yaw), 3])
+    direction[..., 0] = np.cos(pitch) * np.sin(yaw)
+    direction[..., 1] = -np.sin(pitch)
+    direction[..., 2] = -np.cos(pitch) * np.cos(yaw)
+    return direction
+
+
+def get_corrected_gaze(gaze_dir, head_point):
+
+    yaw_est, pitch_est = yaw_pitch_from_direction(gaze_dir)
+    yaw_head, pitch_head = yaw_pitch_from_direction(-head_point / np.linalg.norm(head_point))
+
+    yaw_comibned = yaw_est + yaw_head
+    pitch_combined = pitch_est + pitch_head
+
+    return direction_from_yaw_pitch(yaw_comibned, pitch_combined)
 
 def visualize_plane(fig, plane, boundary_points, middle_points):
     A, B, C, D = plane

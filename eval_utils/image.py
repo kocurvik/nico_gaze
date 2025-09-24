@@ -24,15 +24,14 @@ def load_data(npy_path):
     return array
 
 
-def get_l_r_image_fnames(img_folder, max_imgs=None, datasetFolder=False, withGlasses=True, name='*', index=1):
+def get_l_r_image_fnames(img_folder, max_imgs=None, datasetFolder=False, name='*', index=1):
     if name == '': name = '*'
     if not datasetFolder:
         glob_string_l = '{}/*l*.png'.format(img_folder)
         glob_string_r = '{}/*r*.png'.format(img_folder)
     else:
-        glasses = 'with_glasses' if withGlasses else 'no_glasses'
-        glob_string_l = '{}/{}/{}/{}/*l*.png'.format(img_folder, name, glasses, index)
-        glob_string_r = '{}/{}/{}/{}/*r*.png'.format(img_folder, name, glasses, index)
+        glob_string_l = '{}/{}/*/{}/*l*.png'.format(img_folder, name, index)
+        glob_string_r = '{}/{}/*/{}/*r*.png'.format(img_folder, name, index)
 
     images_l = sorted(glob.glob(glob_string_l))
     images_r = sorted(glob.glob(glob_string_r))
@@ -128,20 +127,20 @@ def get_data(save_dir, prefix=''):
     # # Process L2CS errors
     for err in list_errors_with_glasses_L2CS:
         errors_with_glasses_L2CS_angle = np.append(errors_with_glasses_L2CS_angle, err.angle_error)
-        errors_with_glasses_L2CS_distance = np.append(errors_with_glasses_L2CS_distance, err.distance_error)
+        errors_with_glasses_L2CS_distance = np.append(errors_with_glasses_L2CS_distance, err.distance_error_3d)
 
     for err in list_errors_no_glasses_L2CS:
         errors_no_glasses_L2CS_angle = np.append(errors_no_glasses_L2CS_angle, err.angle_error)
-        errors_no_glasses_L2CS_distance = np.append(errors_no_glasses_L2CS_distance, err.distance_error)
+        errors_no_glasses_L2CS_distance = np.append(errors_no_glasses_L2CS_distance, err.distance_error_3d)
 
     # Process GazeTR errors
     for err in list_errors_with_glasses_GazeTR:
         errors_with_glasses_GazeTR_angle = np.append(errors_with_glasses_GazeTR_angle, err.angle_error)
-        errors_with_glasses_GazeTR_distance = np.append(errors_with_glasses_GazeTR_distance, err.distance_error)
+        errors_with_glasses_GazeTR_distance = np.append(errors_with_glasses_GazeTR_distance, err.distance_error_3d)
 
     for err in list_errors_no_glasses_GazeTR:
         errors_no_glasses_GazeTR_angle = np.append(errors_no_glasses_GazeTR_angle, err.angle_error)
-        errors_no_glasses_GazeTR_distance = np.append(errors_no_glasses_GazeTR_distance, err.distance_error)
+        errors_no_glasses_GazeTR_distance = np.append(errors_no_glasses_GazeTR_distance, err.distance_error_3d)
 
     errors_L2CS_angle = np.concatenate((errors_with_glasses_L2CS_angle, errors_no_glasses_L2CS_angle))
     errors_L2CS_distance = np.concatenate((errors_with_glasses_L2CS_distance, errors_no_glasses_L2CS_distance))
