@@ -215,103 +215,61 @@ class Evaluator():
             directions = [x['est_direction'] for x in self.results if x['method'] == model_name]
             plot_angle_distribution(model_name, directions)
 
+    def plot_cummulative_errors(self):
+        def err_dict():
+            return {'with_glasses': {}, 'no_glasses': {}, 'both': {}}
 
-    def compensation_model(self, model_results, participant, sample_size, repeats=100):
-        res_test = [x for x in model_results if x['participant'] != participant]
-        res_train = [x for x in model_results if x['participant'] == participant]
+        errors = {'angular_error_3d': err_dict(), 'angular_error_2d': err_dict(), 'distance_error_3d': err_dict()}
 
-        test_gt_directions = np.array([x['gt_direction'] for x in res_test])
-        test_est_directions = np.array([x['est_direction'] for x in res_test])
-        train_gt_directions = np.array([x['gt_direction'] for x in res_train])
-        train_est_directions = np.array([x['est_direction'] for x in res_train])
-                
-        yaw_est_test, pitch_est_test = yaw_pitch_from_direction(test_est_directions)
-        X_est_test = np.column_stack([yaw_est_test, pitch_est_test])
-        yaw_gt_test, pitch_gt_test = yaw_pitch_from_direction(test_gt_directions)
-
-        yaw_est_train, pitch_est_train = yaw_pitch_from_direction(train_est_directions)
-        yaw_gt_train, pitch_gt_train = yaw_pitch_from_direction(train_gt_directions)
-        X_train = np.column_stack([yaw_est_train, pitch_est_train])
-
-        angular_error_means = []
-        distance_error_medians = []
-
-        l = np.zeros(len(X_train)) == 1
-        l[:sample_size] = True
-
-        for _ in range(repeats):
-            np.random.shuffle(l)
-            reg_yaw = LinearRegression().fit(X_train[l, :1], yaw_gt_train[l])
-            pred_yaw = reg_yaw.predict(X_est_test[:, :1])
-    
-            reg_pitch = LinearRegression().fit(X_train[l, 1:], pitch_gt_train[l])
-            pred_pitch = reg_pitch.predict(X_est_test[:, 1:])
-
-            pred_directions = direction_from_yaw_pitch(pred_yaw, pred_pitch)
-
-            angle_errors = [vectors_angle(x, y) for x, y in zip(test_gt_directions, pred_directions)]
-            angular_error_means.append(np.mean(angle_errors))
-
-            intersection_points = [planeDetector.find_intersection(np.array(x['plane']),
-                                                                   np.array(x['head_point']),
-                                                                   pred_direction)
-                                   for x, pred_direction in zip(res_test, pred_directions)]
-
-            distance_error_medians.append(np.mean([np.linalg.norm(x - np.array(y['view_point'])) / 10
-                                                   for x, y in zip(intersection_points, res_test)]))
-
-        return angular_error_means, distance_error_medians
-
-
-    def eval_compensation(self):
-        np.random.seed(45648)
-
-        participants = sorted(list(set([x['participant'] for x in self.results])))
-        train_sizes = [5, 10, 20, 30]
-
-        row_vals = []
+        for error_type in errors.keys():
+            for model_name in self.models.keys():
+                errors[error_type][model_name] = [x[error_type] for x in self.results if x['method'] == model_name]
 
         methods = ['GazeTR', 'L2CS', '3DGazeNet', 'gaze3d']
 
+        angles = np.linspace(0, 30, 91)
+
+        plt.figure(figsize=(7, 4))
+
         for model_name in methods:
-            model_results = [x for x in self.results if x['method'] == model_name]
+            errs = np.array(errors['angular_error_3d'][model_name])
+            ys = [100 * np.sum(errs < x) / len(errs) for x in angles]
+            plt.plot(angles, ys, label = 'model_name', linewidth=2)
 
-            for train_size in train_sizes:
-                angular_error_means = []
-                distance_error_medians = []
-                for participant in participants:
-                    angular, distance = self.compensation_model(model_results, participant, train_size)
-                    angular_error_means.extend(angular)
-                    distance_error_medians.extend(distance)
+        plt.ylim([0, 100.0])
+        plt.xlim([angles[0], angles[-1]])
 
-                print(f"Model: {model_name}, size: {train_size} - angular mean: {np.mean(angular_error_means)} +/- {np.std(angular_error_means)} - distance median: {np.mean(distance_error_medians)} +/- {np.std(distance_error_medians)}")
-                row_vals.append([np.mean(angular_error_means), np.std(angular_error_means), np.mean(distance_error_medians), np.std(distance_error_medians)])
+        large_size = 20
+        small_size = 16
 
-        lens = np.zeros_like(row_vals)
-        for r in range(len(row_vals)):
-            for c in range(len(row_vals[r])):
-                row_vals[r][c] = f'{row_vals[r][c]:.2f}'
-                lens[r][c] = len(row_vals[r][c])
+        plt.ylabel('Precision (%)', fontsize=large_size)
+        plt.xlabel('Angular Error ($^\circ$)', fontsize=large_size)
+        plt.tick_params(axis='x', which='major', labelsize=small_size)
+        plt.tick_params(axis='y', which='major', labelsize=small_size)
 
-        max_lens = np.max(lens, axis=0)
-        for r in range(len(row_vals)):
-            for c in range(len(row_vals[r])):
-                phantoms = int(max_lens[c] - lens[r][c])
-                if phantoms > 0:
-                    row_vals[r][c] = '\phantom{' + phantoms * '1' + '}' + row_vals[r][c]
+        plt.savefig(f'figs/cum_angle.pdf', bbox_inches='tight', pad_inches=0.1)
 
-        for i in range(4):
-            print('\\multirow{4}{*}{' + methods[i] + '}' )
-            for j in range(4):
-                print(f'& {train_sizes[j]} & {row_vals[i * 4 + j][0]}~$\pm$~{row_vals[i * 4 + j][1]}& {row_vals[i * 4 + j][2]}~$\pm$~{row_vals[i * 4 + j][3]} \\\\')
-            print('\\hline')
+        distances = np.linspace(0, 100, 101)
 
+        plt.figure(figsize=(7, 4))
 
+        for model_name in methods:
+            errs = np.array(errors['distance_error_3d'][model_name])
+            ys = [100 * np.sum(errs < x * 10) / len(errs) for x in distances]
+            plt.plot(distances, ys, label = 'model_name', linewidth=2)
 
+        plt.ylim([0, 100.0])
+        plt.xlim([distances[0], distances[-1]])
 
+        large_size = 20
+        small_size = 16
 
+        plt.ylabel('Precision (%)', fontsize=large_size)
+        plt.xlabel('Distance Error (cm)', fontsize=large_size)
+        plt.tick_params(axis='x', which='major', labelsize=small_size)
+        plt.tick_params(axis='y', which='major', labelsize=small_size)
 
-                    
+        plt.savefig(f'figs/cum_dist.pdf', bbox_inches='tight', pad_inches=0.1)
 
 
 
@@ -332,8 +290,9 @@ if __name__ == '__main__':
     else:
         evaluator.init_models()
         evaluator.eval()
-    evaluator.eval_compensation()
     evaluator.print_tables()
+    evaluator.plot_cummulative_errors()
+
     evaluator.plot_distributions()
 
 
