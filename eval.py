@@ -55,7 +55,6 @@ class Evaluator():
         self.calib_dir = load_calib_data(self.calib_file)
 
         num_of_image_folders = 20
-        num_of_image_folders = 1
 
         for index in range(1, num_of_image_folders + 1):
             self.eval_dir(self.eyeTrackerDir, index=index)

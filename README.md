@@ -2,13 +2,13 @@
 
 Pre-print: TBA.
 
-Abstract: This paper evaluates the current gaze estimation methods within a HRI context of a shared workspace scenario. We introduce a new, annotated dataset collected with the NICO robotic platform. We evaluate four state-of-the-art gaze estimation models. The evaluation shows that the angular errors are close to those reported on general-purpose benchmarks. However, when expressed in terms of distance in the shared work space the best median error is 16.48 cm quantifying the practical limitations of current methods. We conclude by discussing these limitations and offering recommendations on how to best integrate gaze estimation as a modality in HRI systems.
+Abstract: This paper evaluates the current gaze estimation methods within a human-robot interaction (HRI) context of a shared workspace scenario. We introduce a new, annotated dataset collected with the NICO robotic platform. We evaluate four state-of-the-art gaze estimation models. The evaluation shows that the angular errors are close to those reported on general-purpose benchmarks. However, when expressed in terms of distance in the shared workspace the best median error is 16.48 cm, quantifying the practical limitations of current methods. We conclude by discussing these limitations and offering recommendations on how to best integrate gaze estimation as a modality in HRI systems.
 
 ## Running the code
 
 ### Download the dataset
 
-Download the dataset from TBA.
+Download the dataset from [Zenodo](https://doi.org/10.5281/zenodo.23059771).
 
 ### Calibrating cameras (optional)
 
@@ -30,14 +30,14 @@ python eval_utils/calibrate_stereo.py path/to/dataset/calibration
 * Download [data folder with weights](https://drive.google.com/file/d/1mYvKRJGS8LY5IU3I8Qfvm-xINQyby1z5/view?usp=sharing) and unzip into `GazeNet/data`.
 
 #### Gaze3D
-* Download [face detector weights](https://drive.usercontent.google.com/download?id=1gglIwqxaH2iTvy6lZlXuAcMpd_U0GCUb&export=download&authuser=0) and place them in `gaze3d/weights`.
-* Download [gaze prediction weights](https://github.com/idiap/gaze3d/raw/refs/heads/main/checkpoints/gat_stwsge_gaze360_gf.ckpt) and place them in `gaze3d/weights`.
+* Download [face detector weights](https://drive.usercontent.google.com/download?id=1gglIwqxaH2iTvy6lZlXuAcMpd_U0GCUb&export=download&authuser=0) and place them in `gaze3d/checkpoints`.
+* Download [gaze prediction weights](https://github.com/idiap/gaze3d/raw/refs/heads/main/checkpoints/gat_stwsge_gaze360_gf.ckpt) and place them in `gaze3d/checkpoints`.
 
 
 ### Run the evaluation
 
 ```shell
-python evaluate.py path/to/downloaded_dataset/eyetracker
+python eval.py path/to/downloaded_dataset/eyetracker
 ```
 ## Acknowledgment
 

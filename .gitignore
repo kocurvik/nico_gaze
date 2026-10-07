@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.idea/
+
+# model weights and downloaded data
+GazeTR_net/weights/
+L2CS/weights/
+GazeNet/data/
+gaze3d/checkpoints/
+
+# evaluation outputs
+eval_data/results*.json
+figs/
