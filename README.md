@@ -2,7 +2,7 @@
 
 Pre-print: TBA.
 
-Abstract: This paper evaluates the current gaze estimation methods within a human-robot interaction (HRI) context of a shared workspace scenario. We introduce a new, annotated dataset collected with the NICO robotic platform. We evaluate four state-of-the-art gaze estimation models. The evaluation shows that the angular errors are close to those reported on general-purpose benchmarks. However, when expressed in terms of distance in the shared workspace the best median error is 16.48 cm, quantifying the practical limitations of current methods. We conclude by discussing these limitations and offering recommendations on how to best integrate gaze estimation as a modality in HRI systems.
+Abstract: This paper evaluates the current gaze estimation methods within a human-robot interaction (HRI) context of a shared workspace scenario. We introduce a new, annotated dataset collected with the NICO robotic platform. We evaluate four state-of-the-art gaze estimation models. The evaluation shows that the angular errors are close to those reported on general-purpose benchmarks. However, when expressed in terms of distance in the shared workspace the best median error is 14.57 cm, quantifying the practical limitations of current methods. We conclude by discussing these limitations and offering recommendations on how to best integrate gaze estimation as a modality in HRI systems.
 
 ## Running the code
 
@@ -17,6 +17,8 @@ To recreate the calibration data (`eval_data/calib_data.npy`) run the following.
 ```sh
 python eval_utils/calibrate_stereo.py path/to/dataset/calibration
 ```
+
+The calibration pattern was shown on a display, so its squares were not the nominal 32 mm. The metric scale is therefore fixed by rescaling the calibration so that the stereo baseline matches the measured 70 mm (`--baseline`).
 
 ### Setting up Gaze Estimation Networks
 

@@ -53,6 +53,8 @@ class Evaluator():
     def eval(self):
         self.results = []
         self.calib_dir = load_calib_data(self.calib_file)
+        # squares shown on the display do not have their nominal size (see eval_utils/calibrate_stereo.py)
+        self.chessboard_dim = 42.0 * self.calib_dir.get('display_scale', 1.0)
 
         num_of_image_folders = 20
 
@@ -169,7 +171,7 @@ class Evaluator():
                 errors[error_type][model_name] = [x[error_type] for x in self.results if x['method'] == model_name]            
                 
         
-        tab_tex = PrettyTable(['Method', 'Mean Angular Error', 'Mean Distance', 'Precision@10cm', 'Precision@20cm', 'Precision@50cm'])
+        tab_tex = PrettyTable(['Method', 'Mean Angular Error', 'Median Distance', 'Precision@10cm', 'Precision@20cm', 'Precision@50cm'])
         tab_tex.float_format = '0.2'
 
         methods = ['GazeTR', 'L2CS', '3DGazeNet', 'gaze3d']

@@ -333,7 +333,7 @@ class Gaze3DDemo:
 
     def predict_gaze(self, heads, image):
         dataset = DemoImageData(heads, image)
-        dataloader = DataLoader(dataset, batch_size=1, num_workers=1, shuffle=False)
+        dataloader = DataLoader(dataset, batch_size=1, num_workers=0, shuffle=False)  # spawning workers per image is very slow on Windows
         gaze_stack = []
         # Iterate over the dataset
         for sample in dataloader:

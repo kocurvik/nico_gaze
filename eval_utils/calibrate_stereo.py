@@ -69,7 +69,8 @@ def save_calib_dict(calib_dict, out_folder):
     np.save(npy_path, calib_dict)
 
 
-def calibrate(calib_img_folder, chessboard_x=7, chessboard_y=4, chessboard_dim=31.0, debug=0, max_imgs=None):
+def calibrate(calib_img_folder, chessboard_x=7, chessboard_y=4, chessboard_dim=31.0, debug=0, max_imgs=None,
+              baseline=None):
     obj_pts, img_pts_l, img_pts_r, img_dim_l, img_dim_r = extract_chessboard_points(calib_img_folder,
                                                                                     chessboard_x=chessboard_x,
                                                                                     chessboard_y=chessboard_y,
@@ -103,19 +104,38 @@ def calibrate(calib_img_folder, chessboard_x=7, chessboard_y=4, chessboard_dim=3
     P_l = np.dot(K_l, Rt_l)
     new_P_l = np.dot(new_K_l, Rt_l)
 
-    R, _ = cv2.Rodrigues(rvec)
-    Rt_r = np.hstack((R, tvec))
-    P_r = np.dot(K_r, Rt_r)
-    new_P_r = np.dot(new_K_r, Rt_r)
-
     calib_dict = {'K_l': K_l, 'new_K_l': new_K_l, 'xi_l': xi_l, 'D_l': D_l, 'K_r': K_r, 'new_K_r': new_K_r,
                   'xi_r': xi_r, 'D_r': D_r,
                   'rvec': rvec, 'tvec': tvec, 'rvecs_L': rvecs_L, 'tvecs_L': tvecs_L, 'img_dim_l': img_dim_l,
                   'img_dim_r': img_dim_r,
-                  'new_K_l_wide': new_K_l_wide, 'new_K_r_wide': new_K_r_wide, 'P_l': P_l, 'P_r': P_r,
-                  'new_P_l': new_P_l, 'new_P_r': new_P_r}
+                  'new_K_l_wide': new_K_l_wide, 'new_K_r_wide': new_K_r_wide, 'P_l': P_l, 'new_P_l': new_P_l}
 
+    if baseline is not None:
+        return rescale_baseline(calib_dict, baseline)
+
+    return set_right_projection(calib_dict)
+
+
+def set_right_projection(calib_dict):
+    R, _ = cv2.Rodrigues(calib_dict['rvec'])
+    Rt_r = np.hstack((R, calib_dict['tvec']))
+    calib_dict['P_r'] = np.dot(calib_dict['K_r'], Rt_r)
+    calib_dict['new_P_r'] = np.dot(calib_dict['new_K_r'], Rt_r)
+    calib_dict['baseline'] = np.linalg.norm(calib_dict['tvec'])
     return calib_dict
+
+
+def rescale_baseline(calib_dict, baseline):
+    # The calibration pattern was shown on a display, so its squares did not have the nominal 32 mm size.
+    # The metric scale is fixed by rescaling all translations such that the stereo baseline matches the
+    # measured one (in mm). This is equivalent to calibrating with the true square size.
+    # The same display is used to show the grid in the shared workspace, so the scale is stored to also
+    # correct its nominal square size.
+    scale = baseline / np.linalg.norm(calib_dict['tvec'])
+    calib_dict['tvec'] = calib_dict['tvec'] * scale
+    calib_dict['tvecs_L'] = tuple(t * scale for t in calib_dict['tvecs_L'])
+    calib_dict['display_scale'] = calib_dict.get('display_scale', 1.0) * scale
+    return set_right_projection(calib_dict)
 
 
 def rectify_images(img_l, img_r, calib_dir, get_wide=False):
@@ -221,6 +241,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', type=int, default=0,
                         help='whether to debug 1 shows calib images, 2 lets you see the undistorted calib files')
+    parser.add_argument('-b', '--baseline', type=float, default=70.0,
+                        help='measured stereo baseline in mm used to fix the metric scale of the calibration')
     parser.add_argument('calib_imgs_dir', type=str, help='directory with calibration images')
     args = parser.parse_args()
     return args
@@ -231,5 +253,5 @@ if __name__ == '__main__':
     calib_imgs_dir = args.calib_imgs_dir
     debug = args.debug
 
-    calib_dict = calibrate(calib_imgs_dir, debug=debug, chessboard_dim=32.0, max_imgs=20)
-    save_array(calib_dict, os.path.join('calib_data', 'calib_data.npy'))
+    calib_dict = calibrate(calib_imgs_dir, debug=debug, chessboard_dim=32.0, max_imgs=20, baseline=args.baseline)
+    save_array(calib_dict, os.path.join('eval_data', 'calib_data.npy'))
